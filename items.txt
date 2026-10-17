@@ -1,0 +1,6 @@
+# Uma skin ou caixa por linha, com o nome EXATO do mercado da Steam (market_hash_name).
+# Exemplos, troca pelos teus:
+Fracture Case
+Revolution Case
+AK-47 | Redline (Field-Tested)
+AWP | Asiimov (Field-Tested)
