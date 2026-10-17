@@ -4,3 +4,17 @@ Fracture Case
 Revolution Case
 AK-47 | Redline (Field-Tested)
 AWP | Asiimov (Field-Tested)
+Recoil Case
+Dreams & Nightmares Case
+Kilowatt Case
+Snakebite Case
+Danger Zone Case
+Chroma 3 Case
+Clutch Case
+AK-47 | Asiimov (Field-Tested)
+AK-47 | Vulcan (Field-Tested)
+AWP | Hyper Beast (Field-Tested)
+M4A1-S | Printstream (Field-Tested)
+USP-S | Kill Confirmed (Field-Tested)
+Desert Eagle | Blaze (Factory New)
+Glock-18 | Fade (Factory New)
