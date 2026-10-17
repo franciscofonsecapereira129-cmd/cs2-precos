@@ -1,5 +1,5 @@
-"""Coletor de preços CS2: Skinport + Steam -> data/prices.csv"""
-import csv, os, re, sys, time
+"""Coletor de preços CS2: Skinport + DMarket -> data/prices.csv"""
+import csv, os, sys, time
 from datetime import datetime, timezone
 import requests
 
@@ -11,13 +11,6 @@ UA = {"User-Agent": "cs2-collector/1.0"}
 def load_items():
     with open(ITEMS, encoding="utf-8") as f:
         return [l.strip() for l in f if l.strip() and not l.startswith("#")]
-
-
-def parse_eur(s):
-    s = re.sub(r"[^\d,.]", "", s)
-    if "," in s:
-        s = s.replace(".", "").replace(",", ".")
-    return float(s)
 
 
 def skinport(names):
@@ -36,22 +29,42 @@ def skinport(names):
     return out
 
 
-def steam(name):
+def usd_to_eur():
     r = requests.get(
-        "https://steamcommunity.com/market/priceoverview/",
-        params={"appid": 730, "currency": 3, "market_hash_name": name},
+        "https://api.frankfurter.dev/v1/latest",
+        params={"base": "USD", "symbols": "EUR"},
         headers=UA,
         timeout=30,
     )
-    if r.status_code == 429:
-        raise RuntimeError("Steam limitou os pedidos (429)")
-    if r.status_code != 200:
+    r.raise_for_status()
+    return float(r.json()["rates"]["EUR"])
+
+
+def dmarket(name):
+    r = requests.get(
+        "https://api.dmarket.com/exchange/v1/market/items",
+        params={
+            "gameId": "a8db",
+            "title": name,
+            "currency": "USD",
+            "limit": 50,
+            "orderBy": "price",
+            "orderDir": "asc",
+        },
+        headers=UA,
+        timeout=30,
+    )
+    r.raise_for_status()
+    precos = []
+    for o in r.json().get("objects", []):
+        if o.get("title") != name:
+            continue
+        usd = (o.get("price") or {}).get("USD")
+        if usd:
+            precos.append(int(usd) / 100)
+    if not precos:
         return None
-    j = r.json()
-    if not j.get("success") or not j.get("lowest_price"):
-        return None
-    vol = int(re.sub(r"\D", "", j.get("volume", "0")) or 0)
-    return parse_eur(j["lowest_price"]), vol
+    return min(precos), len(precos)
 
 
 def main():
@@ -61,22 +74,23 @@ def main():
 
     try:
         for n, (p, q) in skinport(names).items():
-            rows.append([ts, "Skinport", n, p, q])
+            rows.append([ts, "Skinport", n, round(p, 2), q])
     except Exception as e:
         print("Aviso Skinport:", e)
 
-    for n in names:
-        try:
-            res = steam(n)
-        except RuntimeError as e:
-            print("Aviso Steam:", e)
-            break
-        except Exception as e:
-            print("Aviso Steam", n, e)
-            res = None
-        if res:
-            rows.append([ts, "Steam", n, res[0], res[1]])
-        time.sleep(4)
+    try:
+        taxa = usd_to_eur()
+        for n in names:
+            try:
+                res = dmarket(n)
+            except Exception as e:
+                print("Aviso DMarket", n, e)
+                res = None
+            if res:
+                rows.append([ts, "DMarket", n, round(res[0] * taxa, 2), res[1]])
+            time.sleep(1)
+    except Exception as e:
+        print("Aviso DMarket/câmbio:", e)
 
     if not rows:
         print("Sem dados nesta corrida.")
