@@ -1,5 +1,5 @@
-"""Coletor de preços CS2 (Skinport + CSFloat opcional) -> data/prices.csv"""
-import csv, os, sys, time
+"""Coletor de preços CS2 (Steam + Skinport + CSFloat opcional) -> data/prices.csv"""
+import csv, os, re, sys, time
 from datetime import datetime, timezone
 import requests
 
@@ -53,6 +53,30 @@ def pick_auto(todos, manual):
     return nomes
 
 
+def parse_eur(t):
+    t = re.sub(r"[^\d,.]", "", t)
+    if "," in t:
+        t = t.replace(".", "").replace(",", ".")
+    return float(t)
+
+
+def steam(name):
+    r = requests.get(
+        "https://steamcommunity.com/market/priceoverview/",
+        params={"appid": 730, "currency": 3, "market_hash_name": name},
+        headers=UA,
+        timeout=30,
+    )
+    if r.status_code == 429:
+        raise RuntimeError("Steam limitou os pedidos (429)")
+    r.raise_for_status()
+    j = r.json()
+    if not j.get("success") or not j.get("lowest_price"):
+        return None
+    vol = int(re.sub(r"\D", "", j.get("volume", "0")) or 0)
+    return parse_eur(j["lowest_price"]), vol
+
+
 def usd_to_eur():
     r = requests.get(
         "https://api.frankfurter.dev/v1/latest",
@@ -91,6 +115,7 @@ def main():
     manual = load_lines(ITEMS)
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     rows = []
+    auto = []
 
     try:
         todos = skinport_all()
@@ -102,6 +127,25 @@ def main():
                 rows.append([ts, "Skinport", n, round(float(it["min_price"]), 2), it.get("quantity") or 0])
     except Exception as e:
         print("Aviso Skinport:", e)
+
+    # Steam: um pedido por item, com pausa para não ser bloqueado
+    erros_steam = 0
+    for n in manual + [x for x in auto if x not in manual]:
+        try:
+            res = steam(n)
+        except RuntimeError as e:
+            print("Aviso Steam:", e, "- a parar a Steam nesta corrida")
+            break
+        except Exception as e:
+            erros_steam += 1
+            print("Aviso Steam", n, e)
+            res = None
+            if erros_steam >= 3:
+                print("Aviso Steam: demasiados erros, a parar")
+                break
+        if res:
+            rows.append([ts, "Steam", n, round(res[0], 2), res[1]])
+        time.sleep(3.5)
 
     key = os.environ.get("CSFLOAT_API_KEY", "").strip()
     if key:
