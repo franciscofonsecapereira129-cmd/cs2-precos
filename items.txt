@@ -1,18 +1,30 @@
-# Uma skin ou caixa por linha, com o nome EXATO do mercado da Steam (market_hash_name).
-# Exemplos, troca pelos teus:
-Fracture Case
-Revolution Case
-AK-47 | Redline (Field-Tested)
-AWP | Asiimov (Field-Tested)
-Recoil Case
+# --- Controller ---
+Desert Eagle | Mint Fan (Minimal Wear)
 Dreams & Nightmares Case
+Sticker | dycha | Antwerp 2022
+Desert Eagle | Mudder (Well-Worn)
+AWP | Safari Mesh (Well-Worn)
+AK-47 | Wintergreen (Well-Worn)
+Gallery Case
+M4A4 | Aeolian Dark (Field-Tested)
+
+# --- Cris ---
+Tec-9 | Raw Ceramic (Minimal Wear)
+Revolution Case
+Five-SeveN | Sky Blue (Field-Tested)
+
+# --- Mercado (para acompanhar) ---
+Fracture Case
+Recoil Case
 Kilowatt Case
 Snakebite Case
 Danger Zone Case
 Chroma 3 Case
 Clutch Case
+AK-47 | Redline (Field-Tested)
 AK-47 | Asiimov (Field-Tested)
 AK-47 | Vulcan (Field-Tested)
+AWP | Asiimov (Field-Tested)
 AWP | Hyper Beast (Field-Tested)
 M4A1-S | Printstream (Field-Tested)
 USP-S | Kill Confirmed (Field-Tested)
